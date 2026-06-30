@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Nudge V1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.3.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2025.3.1/core.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              nudge: {
+                black: "#080B14",
+                navy: "#101827",
+                card: "#151D2E",
+                blue: "#38BDF8",
+                orange: "#FF8C42",
+                muted: "#94A3B8",
+                line: "#334155",
+                warm: "#F5E6D3",
+                ink: "#1E293B"
+              }
+            },
+            boxShadow: {
+              glow: "0 0 30px #38BDF855",
+              card: "0 8px 24px rgba(0,0,0,0.25)"
+            },
+            fontFamily: {
+              sans: ["PingFang SC", "SF Pro Display", "Roboto", "Inter", "system-ui", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      html {
+        background: #050711;
+      }
+
+      body {
+        min-height: 100vh;
+        color: #fff;
+        background:
+          radial-gradient(circle at 18% 0%, rgba(56, 189, 248, 0.14), transparent 30%),
+          radial-gradient(circle at 90% 14%, rgba(255, 140, 66, 0.1), transparent 28%),
+          #050711;
+        letter-spacing: 0;
+      }
+
+      [data-page] {
+        display: none;
+      }
+
+      [data-page].active {
+        display: block;
+        animation: pageIn 360ms ease-out both;
+      }
+
+      .breath-orb {
+        animation: breathe 4s ease-in-out infinite;
+      }
+
+      .soft-pulse {
+        animation: softPulse 3s ease-in-out infinite;
+      }
+
+      .risk-border {
+        animation: riskGlow 1.4s ease-in-out infinite;
+      }
+
+      .bar {
+        animation: rise 700ms ease-out both;
+      }
+
+      .skeleton-line {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
+      }
+
+      .muscle-hotspot {
+        cursor: pointer;
+        transition: opacity 180ms ease, transform 180ms ease;
+        transform-origin: center;
+      }
+
+      .muscle-hotspot:hover,
+      .muscle-hotspot.active {
+        opacity: 1;
+        transform: scale(1.06);
+      }
+
+      .phone-frame {
+        min-height: 812px;
+      }
+
+      @keyframes breathe {
+        0%, 100% {
+          transform: scale(0.82);
+          background: radial-gradient(circle, rgba(56, 189, 248, 0.95), rgba(56, 189, 248, 0.18) 58%, transparent 70%);
+          box-shadow: 0 0 34px rgba(56, 189, 248, 0.48);
+        }
+        50% {
+          transform: scale(1.08);
+          background: radial-gradient(circle, rgba(255, 140, 66, 0.92), rgba(255, 140, 66, 0.16) 58%, transparent 70%);
+          box-shadow: 0 0 38px rgba(255, 140, 66, 0.42);
+        }
+      }
+
+      @keyframes softPulse {
+        0%, 100% { opacity: 0.64; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes riskGlow {
+        0%, 100% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.35), 0 0 18px rgba(239, 68, 68, 0.14); }
+        50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.78), 0 0 30px rgba(239, 68, 68, 0.28); }
+      }
+
+      @keyframes pageIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes rise {
+        from { transform: scaleY(0.2); opacity: 0.3; }
+        to { transform: scaleY(1); opacity: 1; }
+      }
+
+      py-script {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="font-sans">
+    <main class="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-6">
+      <section class="phone-frame relative w-full max-w-[430px] overflow-hidden rounded-[36px] border border-white/10 bg-nudge-black shadow-2xl">
+        <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.12),transparent_32%)]"></div>
+
+        <section id="page-home" data-page class="active relative px-5 pb-28 pt-6">
+          <header class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-nudge-muted">晚上好，小R</p>
+              <h1 class="mt-1 text-2xl font-semibold">今日身体状态</h1>
+            </div>
+            <button data-nav="settings" class="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/[0.04]" aria-label="隐私设置">
+              <svg width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="1.6" viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 1 1-2.98 2.98l-.04-.04A1.8 1.8 0 0 0 14.8 19.6a1.8 1.8 0 0 0-1.08 1.64v.12a2.1 2.1 0 1 1-4.2 0v-.06A1.8 1.8 0 0 0 8.34 19.6a1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 1 1-2.98-2.98l.04-.04A1.8 1.8 0 0 0 3.74 15a1.8 1.8 0 0 0-1.64-1.08H2.1a2.1 2.1 0 1 1 0-4.2h.06a1.8 1.8 0 0 0 1.64-1.08 1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 1 1 6.38 3.64l.04.04A1.8 1.8 0 0 0 8.4 4.04a1.8 1.8 0 0 0 1.08-1.64V2.1a2.1 2.1 0 1 1 4.2 0v.24a1.8 1.8 0 0 0 1.08 1.64 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 1 1 2.98 2.98l-.04.04a1.8 1.8 0 0 0-.36 1.98c.18.5.62.9 1.14 1.04h.26a2.1 2.1 0 1 1 0 4.2h-.18A1.8 1.8 0 0 0 19.4 15Z"/></svg>
+            </button>
+          </header>
+
+          <section class="mt-5 rounded-[28px] bg-nudge-card p-4 shadow-card">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-white">7天肌群激活</p>
+                <p class="mt-1 text-xs text-nudge-muted">点击沉睡区域，获得一个推荐动作</p>
+              </div>
+              <span class="rounded-full border border-nudge-blue/25 bg-nudge-blue/10 px-3 py-1 text-xs font-semibold text-nudge-blue">AI 本地分析</span>
+            </div>
+
+            <div class="mt-4 grid grid-cols-[1.05fr_0.95fr] items-center gap-2">
+              <div class="relative aspect-[0.72]">
+                <svg viewBox="0 0 220 300" class="h-full w-full">
+                  <defs>
+                    <radialGradient id="bodyGlow" cx="50%" cy="35%" r="60%">
+                      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.22"/>
+                      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
+                    </radialGradient>
+                  </defs>
+                  <ellipse cx="110" cy="145" rx="92" ry="132" fill="url(#bodyGlow)"/>
+                  <circle cx="110" cy="42" r="22" fill="none" stroke="#64748B" stroke-width="7"/>
+                  <path class="skeleton-line" d="M110 66v92M74 91h72M80 92l-28 58M140 92l28 58M92 160l-24 92M128 160l24 92M84 252h-25M136 252h25" fill="none" stroke="#64748B" stroke-width="9"/>
+                  <ellipse id="hot-shoulder" role="button" tabindex="0" aria-label="选择肩部" data-muscle="肩部" class="muscle-hotspot" cx="72" cy="91" rx="24" ry="18" fill="#8B5CF6" opacity="0.78"/>
+                  <ellipse id="hot-chest" role="button" tabindex="0" aria-label="选择胸背" data-muscle="胸背" class="muscle-hotspot active" cx="110" cy="105" rx="38" ry="33" fill="#FF8C42" opacity="0.86"/>
+                  <ellipse id="hot-core" role="button" tabindex="0" aria-label="选择核心" data-muscle="核心" class="muscle-hotspot" cx="110" cy="154" rx="33" ry="38" fill="#3B82F6" opacity="0.68"/>
+                  <ellipse id="hot-leg-left" role="button" tabindex="0" aria-label="选择腿部" data-muscle="腿部" class="muscle-hotspot" cx="78" cy="212" rx="22" ry="52" fill="#8B5CF6" opacity="0.72"/>
+                  <ellipse id="hot-leg-right" role="button" tabindex="0" aria-label="选择腿部" data-muscle="腿部" class="muscle-hotspot" cx="142" cy="212" rx="22" ry="52" fill="#8B5CF6" opacity="0.72"/>
+                  <circle cx="110" cy="154" r="5" fill="#38BDF8"/>
+                </svg>
+                <button onclick="window.nudgeSelectMuscle('肩部')" class="heat-button absolute left-[20%] top-[26%] h-[13%] w-[26%] rounded-full" data-muscle="肩部" aria-label="选择肩部"></button>
+                <button onclick="window.nudgeSelectMuscle('胸背')" class="heat-button absolute left-[30%] top-[31%] h-[18%] w-[40%] rounded-full" data-muscle="胸背" aria-label="选择胸背"></button>
+                <button onclick="window.nudgeSelectMuscle('核心')" class="heat-button absolute left-[32%] top-[47%] h-[24%] w-[36%] rounded-full" data-muscle="核心" aria-label="选择核心"></button>
+                <button onclick="window.nudgeSelectMuscle('腿部')" class="heat-button absolute left-[22%] top-[63%] h-[30%] w-[24%] rounded-full" data-muscle="腿部" aria-label="选择腿部"></button>
+                <button onclick="window.nudgeSelectMuscle('腿部')" class="heat-button absolute left-[54%] top-[63%] h-[30%] w-[24%] rounded-full" data-muscle="腿部" aria-label="选择腿部"></button>
+              </div>
+
+              <div class="space-y-3">
+                <div class="rounded-3xl bg-nudge-navy p-4">
+                  <p class="text-xs text-nudge-muted">姿态评分</p>
+                  <div class="mt-1 flex items-end gap-2">
+                    <span id="score" class="text-[40px] font-bold leading-none">82</span>
+                    <span class="mb-1 text-xs text-emerald-400">+6%</span>
+                  </div>
+                  <p class="mt-2 text-xs text-nudge-muted">比昨天更稳定了呢~</p>
+                </div>
+                <div class="rounded-3xl bg-nudge-navy p-4">
+                  <p class="text-xs text-nudge-muted">今日有效刺激</p>
+                  <p id="active-muscle" class="mt-2 text-xl font-semibold text-nudge-orange">胸背</p>
+                  <div class="mt-3 h-2 rounded-full bg-white/10">
+                    <div id="muscle-progress" class="h-2 rounded-full bg-nudge-orange" style="width: 76%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="mt-4 rounded-[24px] border border-nudge-blue/18 bg-nudge-blue/10 p-4">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-xs text-nudge-muted">今日推荐动作</p>
+                <h2 id="recommended-action" class="mt-1 text-xl font-semibold">推墙俯卧撑</h2>
+                <p id="recommended-copy" class="mt-2 text-sm text-slate-300">温和激活胸背，适合下班后开始。</p>
+              </div>
+              <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-nudge-blue/15 shadow-glow">
+                <svg width="28" height="28" fill="none" stroke="#38BDF8" stroke-width="1.7" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>
+              </div>
+            </div>
+          </section>
+
+          <section class="mt-4 grid grid-cols-2 gap-3">
+            <button data-nav="training" class="h-16 rounded-[28px] bg-nudge-blue text-base font-semibold text-slate-950 shadow-glow">开始训练</button>
+            <button data-nav="review" class="h-16 rounded-[28px] border border-nudge-line bg-transparent text-base font-semibold text-white">查看复盘</button>
+          </section>
+
+          <section class="mt-5 rounded-[24px] bg-nudge-card p-4">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium">训练趋势</p>
+              <p class="text-xs text-nudge-muted">过去7天</p>
+            </div>
+            <div id="trend-bars" class="mt-5 flex h-24 items-end justify-between gap-3"></div>
+          </section>
+        </section>
+
+        <section id="page-training" data-page class="relative min-h-[812px] px-5 pb-28 pt-6">
+          <div class="risk-border absolute inset-0 hidden rounded-[36px]" id="risk-frame"></div>
+          <header class="flex items-center justify-between">
+            <button data-nav="home" class="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/[0.04]" aria-label="返回首页">
+              <svg width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="1.7" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="rounded-full border border-white/10 px-3 py-1 text-xs text-nudge-muted">单机模式</span>
+          </header>
+
+          <div class="flex min-h-[640px] flex-col items-center justify-center text-center">
+            <p class="text-xs uppercase tracking-[0.2em] text-nudge-muted">Set 2 / 3</p>
+            <h2 id="training-action" class="mt-4 text-[32px] font-semibold leading-tight">推墙俯卧撑</h2>
+            <div class="relative mt-12 grid h-44 w-44 place-items-center">
+              <div class="breath-orb absolute h-36 w-36 rounded-full"></div>
+              <div class="relative grid h-24 w-24 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
+                <span id="rep-count" class="text-[40px] font-bold leading-none">12</span>
+              </div>
+            </div>
+            <p id="breath-text" class="mt-8 text-sm text-nudge-muted">跟着光球呼吸，慢慢来就好呀</p>
+            <button id="risk-button" class="mt-8 rounded-full border border-red-400/30 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-300">模拟高风险提醒</button>
+          </div>
+        </section>
+
+        <section id="page-review" data-page class="min-h-[812px] bg-nudge-warm px-5 pb-28 pt-6 text-nudge-ink">
+          <header class="flex items-center justify-between">
+            <button data-nav="home" class="grid h-11 w-11 place-items-center rounded-full border border-slate-300 bg-white/40" aria-label="返回首页">
+              <svg width="22" height="22" fill="none" stroke="#1E293B" stroke-width="1.7" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="rounded-full bg-white/55 px-3 py-1 text-xs font-semibold">训练结束</span>
+          </header>
+
+          <section class="mt-8">
+            <p class="text-sm text-slate-600">今日有效刺激肌群</p>
+            <h2 class="mt-2 text-[32px] font-bold">臀部 · 核心 · 胸背</h2>
+            <p class="mt-2 text-sm text-slate-600">你的动作更稳定了，明天我们再来一次呀</p>
+          </section>
+
+          <section class="mt-6 grid grid-cols-3 gap-3">
+            <div class="rounded-[20px] bg-white/60 p-4">
+              <p class="text-xs text-slate-500">姿态评分</p>
+              <p class="mt-2 text-3xl font-bold">86</p>
+            </div>
+            <div class="rounded-[20px] bg-white/60 p-4">
+              <p class="text-xs text-slate-500">完成度</p>
+              <p class="mt-2 text-3xl font-bold">92%</p>
+            </div>
+            <div class="rounded-[20px] bg-white/60 p-4">
+              <p class="text-xs text-slate-500">时长</p>
+              <p class="mt-2 text-3xl font-bold">18</p>
+            </div>
+          </section>
+
+          <section class="mt-5 rounded-[28px] bg-white/60 p-4">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">慢动作骨骼对比</p>
+              <p class="text-xs text-slate-500">最佳 vs 待留意</p>
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <div class="rounded-[22px] bg-slate-900 p-3 text-center text-white">
+                <p class="text-xs text-slate-400">最好一组</p>
+                <svg viewBox="0 0 120 150" class="mx-auto mt-2 h-36">
+                  <circle cx="60" cy="20" r="12" fill="none" stroke="#38BDF8" stroke-width="5"/>
+                  <path d="M60 34v48M35 53h50M44 84l-20 42M76 84l20 42" fill="none" stroke="#38BDF8" stroke-width="6" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="rounded-[22px] bg-slate-900 p-3 text-center text-white">
+                <p class="text-xs text-slate-400">留意一组</p>
+                <svg viewBox="0 0 120 150" class="mx-auto mt-2 h-36">
+                  <circle cx="60" cy="20" r="12" fill="none" stroke="#38BDF8" stroke-width="5"/>
+                  <path d="M60 34v48M35 53h50M44 84l-14 42M76 84l28 42" fill="none" stroke="#38BDF8" stroke-width="6" stroke-linecap="round"/>
+                  <path d="M78 86c9 8 12 17 13 27" fill="none" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <p class="mt-4 rounded-2xl bg-orange-100 px-4 py-3 text-sm text-slate-700">下蹲时左膝还可以再打开一点点哦~</p>
+          </section>
+
+          <section class="mt-5 rounded-[24px] bg-slate-900 p-4 text-white">
+            <p class="text-xs text-nudge-muted">明天推荐激活</p>
+            <div class="mt-2 flex items-center justify-between">
+              <p class="text-xl font-semibold">腿部稳定</p>
+              <button data-nav="training" class="rounded-full bg-nudge-orange px-4 py-2 text-sm font-semibold text-slate-950">预约</button>
+            </div>
+          </section>
+        </section>
+
+        <section id="page-community" data-page class="relative px-5 pb-28 pt-6">
+          <header>
+            <p class="text-xs text-nudge-muted">新手隔离茧房 · Day 12</p>
+            <h2 class="mt-1 text-2xl font-semibold">练友圈</h2>
+          </header>
+
+          <div class="mt-5 rounded-[24px] border border-nudge-blue/18 bg-nudge-blue/10 p-4">
+            <p class="text-sm font-medium text-nudge-blue">仅展示同阶段用户</p>
+            <p class="mt-2 text-sm text-slate-300">这里没有实拍图、骨骼图和文字评论，只保留轻量陪伴。</p>
+          </div>
+
+          <div class="mt-4 space-y-3" id="community-feed"></div>
+        </section>
+
+        <section id="page-settings" data-page class="relative px-5 pb-28 pt-6">
+          <header class="flex items-center gap-3">
+            <button data-nav="home" class="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/[0.04]" aria-label="返回首页">
+              <svg width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="1.7" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div>
+              <p class="text-xs text-nudge-muted">Privacy First</p>
+              <h2 class="text-2xl font-semibold">隐私与安全</h2>
+            </div>
+          </header>
+
+          <section class="mt-6 rounded-[28px] bg-nudge-card p-5">
+            <h3 class="text-lg font-semibold">隐私宣誓</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-300">所有骨骼数据仅保存在本机，不上传。摄像头画面实时提取后销毁，不落盘。</p>
+            <div class="mt-5 rounded-[22px] bg-nudge-navy p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-semibold">隐藏社区入口</p>
+                  <p class="mt-1 text-xs text-nudge-muted">开启后产品变为纯单机工具</p>
+                </div>
+                <button id="community-toggle" class="relative h-8 w-14 rounded-full bg-nudge-blue transition">
+                  <span class="absolute right-1 top-1 h-6 w-6 rounded-full bg-white transition"></span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="mt-4 rounded-[28px] border border-red-400/25 bg-red-400/10 p-5">
+            <h3 class="text-lg font-semibold text-red-200">合规数据删除</h3>
+            <p class="mt-3 text-sm leading-6 text-red-100/80">清除本机保存的关键点 Json。注销账号时，云端缓存数据将在 72 小时内物理删除。</p>
+            <button id="clear-data" class="mt-5 h-14 w-full rounded-[28px] bg-red-400 text-base font-semibold text-slate-950">一键清除所有本地骨骼数据</button>
+            <p id="clear-result" class="mt-3 text-center text-sm text-red-100/80"></p>
+          </section>
+        </section>
+
+        <nav class="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-nudge-black/95 px-5 py-4 backdrop-blur">
+          <div class="grid grid-cols-4 gap-2 text-xs">
+            <button data-nav="home" class="nav-item rounded-2xl px-2 py-2 text-nudge-blue">
+              <span class="mx-auto block h-6 w-6"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/></svg></span>
+              <span>首页</span>
+            </button>
+            <button data-nav="community" class="nav-item rounded-2xl px-2 py-2 text-nudge-muted">
+              <span class="mx-auto block h-6 w-6"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              <span>练友圈</span>
+            </button>
+            <button data-nav="review" class="nav-item rounded-2xl px-2 py-2 text-nudge-muted">
+              <span class="mx-auto block h-6 w-6"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-4"/><path d="M12 15V7"/><path d="M16 15v-6"/></svg></span>
+              <span>复盘</span>
+            </button>
+            <button data-nav="settings" class="nav-item rounded-2xl px-2 py-2 text-nudge-muted">
+              <span class="mx-auto block h-6 w-6"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.02.02a2 2 0 1 1-2.83 2.83l-.02-.02A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.05a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.02.02a2 2 0 1 1-2.83-2.83l.02-.02A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.05A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.88l-.02-.02A2 2 0 1 1 7.07 4.27l.02.02A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.05a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.02-.02a2 2 0 1 1 2.83 2.83l-.02.02A1.7 1.7 0 0 0 19.4 9c.18.47.58.84 1.06.95H21a2 2 0 1 1 0 4h-.54A1.7 1.7 0 0 0 19.4 15Z"/></svg></span>
+              <span>设置</span>
+            </button>
+          </div>
+        </nav>
+      </section>
+    </main>
+
+    <script type="py">
+from pyodide.ffi import to_js
+from js import window, CustomEvent
+
+window.nudgeData = to_js({
+    "muscles": {
+        "胸背": {"action": "推墙俯卧撑", "copy": "温和激活胸背，适合下班后开始。", "progress": 76, "score": 82},
+        "核心": {"action": "死虫式呼吸", "copy": "轻轻绷住腹部，像准备接球一样呢~", "progress": 42, "score": 79},
+        "腿部": {"action": "椅子深蹲", "copy": "膝盖还可以再打开一点点哦~", "progress": 64, "score": 84},
+        "肩部": {"action": "墙天使", "copy": "试试让肩胛慢慢贴近墙面哦~", "progress": 58, "score": 81},
+    },
+    "community": [
+        {"name": "Luna", "days": 8, "time": "16 分钟", "cal": "76 kcal", "score": 78, "emoji": "👍 😄 ✨"},
+        {"name": "Ming", "days": 14, "time": "22 分钟", "cal": "108 kcal", "score": 84, "emoji": "💪 🔥 👏"},
+        {"name": "Rae", "days": 5, "time": "12 分钟", "cal": "54 kcal", "score": 72, "emoji": "👍 ✨"},
+    ],
+    "trend": [46, 62, 54, 76, 68, 84, 92]
+})
+window.dispatchEvent(CustomEvent.new("nudge-data-ready"))
+    </script>
+
+    <script>
+      const fallbackData = {
+        muscles: {
+          "胸背": { action: "推墙俯卧撑", copy: "温和激活胸背，适合下班后开始。", progress: 76, score: 82 },
+          "核心": { action: "死虫式呼吸", copy: "轻轻绷住腹部，像准备接球一样呢~", progress: 42, score: 79 },
+          "腿部": { action: "椅子深蹲", copy: "膝盖还可以再打开一点点哦~", progress: 64, score: 84 },
+          "肩部": { action: "墙天使", copy: "试试让肩胛慢慢贴近墙面哦~", progress: 58, score: 81 }
+        },
+        community: [
+          { name: "Luna", days: 8, time: "16 分钟", cal: "76 kcal", score: 78, emoji: "👍 😄 ✨" },
+          { name: "Ming", days: 14, time: "22 分钟", cal: "108 kcal", score: 84, emoji: "💪 🔥 👏" },
+          { name: "Rae", days: 5, time: "12 分钟", cal: "54 kcal", score: 72, emoji: "👍 ✨" }
+        ],
+        trend: [46, 62, 54, 76, 68, 84, 92]
+      };
+
+      let repCount = 12;
+      let communityHidden = false;
+      let appStarted = false;
+
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+      const text = (selector, value) => {
+        const node = $(selector);
+        if (node) node.textContent = value;
+      };
+
+      function getData() {
+        return window.nudgeData || fallbackData;
+      }
+
+      function showPage(name) {
+        $$("[data-page]").forEach((page) => page.classList.remove("active"));
+        $(`#page-${name}`)?.classList.add("active");
+        $$(".nav-item").forEach((item) => {
+          const active = item.dataset.nav === name;
+          item.classList.toggle("text-nudge-blue", active);
+          item.classList.toggle("text-nudge-muted", !active);
+        });
+      }
+
+      function selectMuscle(name) {
+        const data = getData().muscles[name] || getData().muscles["胸背"];
+        text("#active-muscle", name);
+        text("#recommended-action", data.action);
+        text("#recommended-copy", data.copy);
+        text("#training-action", data.action);
+        text("#score", data.score);
+        $("#muscle-progress").style.width = `${data.progress}%`;
+        $$(".muscle-hotspot, .heat-button").forEach((hot) => {
+          hot.classList.toggle("active", hot.dataset.muscle === name);
+        });
+      }
+
+      window.nudgeSelectMuscle = selectMuscle;
+
+      function renderTrend() {
+        const box = $("#trend-bars");
+        box.innerHTML = "";
+        getData().trend.forEach((value, index) => {
+          const bar = document.createElement("div");
+          bar.className = "bar w-full rounded-full bg-gradient-to-t from-nudge-blue to-nudge-orange";
+          bar.style.height = `${value}%`;
+          bar.style.animationDelay = `${index * 70}ms`;
+          box.appendChild(bar);
+        });
+      }
+
+      function renderCommunity() {
+        const box = $("#community-feed");
+        box.innerHTML = "";
+        getData().community.forEach((post) => {
+          const card = document.createElement("article");
+          card.className = "rounded-[24px] bg-nudge-card p-4 shadow-card";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="grid h-11 w-11 place-items-center rounded-full bg-nudge-blue/15 text-sm font-bold text-nudge-blue">${post.name[0]}</div>
+                <div>
+                  <p class="font-semibold">${post.name}</p>
+                  <p class="text-xs text-nudge-muted">训练第 ${post.days} 天</p>
+                </div>
+              </div>
+              <span class="rounded-full bg-white/5 px-3 py-1 text-xs text-nudge-muted">同阶段</span>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-2xl bg-nudge-navy p-3"><p class="text-xs text-nudge-muted">时长</p><p class="mt-1 font-semibold">${post.time}</p></div>
+              <div class="rounded-2xl bg-nudge-navy p-3"><p class="text-xs text-nudge-muted">消耗</p><p class="mt-1 font-semibold">${post.cal}</p></div>
+              <div class="rounded-2xl bg-nudge-navy p-3"><p class="text-xs text-nudge-muted">均分</p><p class="mt-1 font-semibold">${post.score}</p></div>
+            </div>
+            <button class="mt-4 w-full rounded-2xl border border-white/10 py-3 text-sm text-slate-200">${post.emoji}</button>
+          `;
+          box.appendChild(card);
+        });
+      }
+
+      function triggerRisk() {
+        const frame = $("#risk-frame");
+        frame.classList.remove("hidden");
+        text("#breath-text", "请停止动作，收紧核心呀");
+        window.setTimeout(() => {
+          frame.classList.add("hidden");
+          text("#breath-text", "跟着光球呼吸，慢慢来就好呀");
+        }, 2200);
+      }
+
+      function clearData() {
+        window.localStorage.clear();
+        text("#clear-result", "本地骨骼数据已清除。云端缓存将按合规路径处理。");
+      }
+
+      function toggleCommunity() {
+        communityHidden = !communityHidden;
+        const button = $("#community-toggle");
+        const knob = $("#community-toggle span");
+        const tab = $('[data-nav="community"].nav-item');
+        button.classList.toggle("bg-nudge-blue", !communityHidden);
+        button.classList.toggle("bg-slate-600", communityHidden);
+        knob.style.right = communityHidden ? "auto" : "4px";
+        knob.style.left = communityHidden ? "4px" : "auto";
+        tab.style.display = communityHidden ? "none" : "block";
+      }
+
+      function bindApp() {
+        if (appStarted) return;
+        appStarted = true;
+        $$("[data-nav]").forEach((button) => button.addEventListener("click", () => showPage(button.dataset.nav)));
+        $$(".muscle-hotspot").forEach((hot) => {
+          hot.addEventListener("click", () => selectMuscle(hot.dataset.muscle));
+          hot.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") selectMuscle(hot.dataset.muscle);
+          });
+        });
+        $("#risk-button").addEventListener("click", triggerRisk);
+        $("#clear-data").addEventListener("click", clearData);
+        $("#community-toggle").addEventListener("click", toggleCommunity);
+        renderTrend();
+        renderCommunity();
+        selectMuscle("胸背");
+        window.setInterval(() => {
+          if (!$("#page-training").classList.contains("active")) return;
+          repCount = repCount <= 1 ? 12 : repCount - 1;
+          text("#rep-count", repCount);
+        }, 1800);
+      }
+
+      window.addEventListener("nudge-data-ready", bindApp);
+      window.addEventListener("DOMContentLoaded", () => window.setTimeout(bindApp, 1200));
+    </script>
+  </body>
+</html>
